@@ -1,0 +1,23 @@
+app:
+  name: "Bruteforce Detector"
+  log_level: "INFO"
+
+logs:
+  ssh_log_path: "logs/ssh_logs.csv"
+  ftp_log_path: "logs/ftp_logs.csv"
+  check_interval: 2
+
+detection:
+  thresholds:
+    max_failed_attempts: 10
+    time_window_minutes: 5
+    min_unique_usernames: 3
+    max_attempts_per_seconds: 5
+
+alerting:
+  enabled: true
+  channels: ["console", "telegram"]
+  cooldown_minutes: 1
+  telegram:
+    bot_token: ""
+    chat_id: ""
