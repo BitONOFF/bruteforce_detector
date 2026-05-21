@@ -39,7 +39,7 @@ def sans(s=10, bold=False): return ('Helvetica', s, 'bold') if bold else ('Helve
 SEV_COLOR = {'HIGH': RED, 'MEDIUM': AMBER, 'LOW': GREEN}
 
 
-#  ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ
+# Вспомогательные классы
 class QueueLogHandler(logging.Handler):
     def __init__(self, q):
         super().__init__()
