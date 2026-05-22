@@ -631,17 +631,36 @@ class BruteforceGUI:
     def _build_settings_tab(self):
         tab = ttk.Frame(self._nb)
         self._nb.add(tab, text='  Настройки  ')
-        canvas = tk.Canvas(tab, bg=BG, highlightthickness=0)
-        vsb = ttk.Scrollbar(tab, orient='vertical', command=canvas.yview)
-        canvas.configure(yscrollcommand=vsb.set)
+        vsb = ttk.Scrollbar(tab, orient='vertical')
+        canvas = tk.Canvas(tab, bg=BG, highlightthickness=0, yscrollcommand=vsb.set)
+        vsb.configure(command=canvas.yview)
         vsb.pack(side='right', fill='y')
         canvas.pack(side='left', fill='both', expand=True)
         inner  = tk.Frame(canvas, bg=BG)
         win_id = canvas.create_window((0, 0), window=inner, anchor='nw')
         inner.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
         canvas.bind('<Configure>', lambda e: canvas.itemconfig(win_id, width=e.width))
+
+        # Прокрутка колёсиком мыши — кросс-платформенно
+        def _on_mousewheel(e):
+            canvas.yview_scroll(int(-1 * (e.delta / 120)), 'units')
+
+        canvas.bind('<MouseWheel>', _on_mousewheel)
+        inner.bind('<MouseWheel>', _on_mousewheel)
+
+        # Передаём скролл от дочерних виджетов наверх
+        def _bind_children(widget):
+            widget.bind('<MouseWheel>', _on_mousewheel, add='+')
+            for child in widget.winfo_children():
+                _bind_children(child)
+
+        # Привязываем после того как форма построена
+        def _after_build():
+            _bind_children(inner)
+
         self._svar: dict = {}
         self._build_settings_form(inner)
+        tab.after(100, _after_build)
 
     def _build_settings_form(self, parent):
         try:
@@ -712,7 +731,7 @@ class BruteforceGUI:
     def _save_settings(self):
         try:
             try:
-                with open('settings.yaml', encoding='utf-8') as f:
+                with open('config/settings.yaml', encoding='utf-8') as f:
                     cfg = yaml.safe_load(f) or {}
             except FileNotFoundError:
                 cfg = {}
@@ -740,7 +759,7 @@ class BruteforceGUI:
                 d = cfg
                 for part in path[:-1]: d = d.setdefault(part, {})
                 d[path[-1]] = cast(self._svar[key].get())
-            with open('settings.yaml', 'w', encoding='utf-8') as f:
+            with open('config/settings.yaml', 'w', encoding='utf-8') as f:
                 yaml.dump(cfg, f, allow_unicode=True, default_flow_style=False)
             messagebox.showinfo('Сохранено',
                 'Настройки записаны.\nПерезапустите детектор для применения.')
