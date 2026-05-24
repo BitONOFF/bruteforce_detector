@@ -5,6 +5,7 @@ from collections import Counter, defaultdict
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import yaml
+from src.data.real_log_parser import SSHLogParser
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -102,6 +103,9 @@ class BruteforceGUI:
         # Тосты
         self._active_toasts = []
         self._chart_refresh_pending = False
+
+        # Препроцессинг (реальные логи = True, демонстрационные = False)
+        self._real_log = True
 
         self._setup_styles()
         self._build_ui()
@@ -1132,7 +1136,16 @@ class BruteforceGUI:
         if HAS_MPL: self._draw_empty_charts()
 
     # Старт приложения
+    @staticmethod
+    def _preprocess_run():
+        open('logs/ftp_logs.csv', 'w').close()
+        open('logs/ssh_logs.csv', 'w').close()
+        parser = SSHLogParser()
+        parser.process_file('logs/auth.log', 'logs/ssh_logs.csv')
+
     def run(self):
+        if self._real_log:
+            self._preprocess_run()
         self.root.protocol('WM_DELETE_WINDOW', self._on_close)
         self.root.mainloop()
 
